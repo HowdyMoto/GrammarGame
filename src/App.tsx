@@ -13,6 +13,7 @@ import '@fontsource/instrument-sans/700.css';
 import '@fontsource/caveat/500.css';
 import '@fontsource/caveat/600.css';
 import '@fontsource/caveat/700.css';
+import '@fontsource/special-elite/400.css';
 
 import type { Mode, Paragraph } from './types';
 import { MODE_INFO } from './types';
@@ -347,6 +348,7 @@ export function App() {
 
       {paraComplete && (
         <CompletionOverlay
+          paragraphTitle={current.title}
           foundCount={foundCount}
           wrong={wrongCount}
           total={total}
@@ -404,7 +406,102 @@ function Welcome({ onStart }: { onStart: (m: Mode) => void }) {
   );
 }
 
+function letterGrade(
+  accuracy: number,
+  revealed: boolean,
+  hadMisses: boolean,
+): string {
+  if (revealed) return 'INC';
+  if (accuracy === 100 && !hadMisses) return 'A+';
+  if (accuracy >= 95) return 'A';
+  if (accuracy >= 90) return 'A-';
+  if (accuracy >= 85) return 'B+';
+  if (accuracy >= 80) return 'B';
+  if (accuracy >= 75) return 'B-';
+  if (accuracy >= 70) return 'C+';
+  if (accuracy >= 65) return 'C';
+  if (accuracy >= 60) return 'C-';
+  if (accuracy >= 50) return 'D';
+  return 'F';
+}
+
+function marginNote(accuracy: number, revealed: boolean): string {
+  if (revealed) return 'See me.';
+  if (accuracy === 100) return 'Excellent!';
+  if (accuracy >= 90) return 'Great work!';
+  if (accuracy >= 75) return 'Nice job!';
+  if (accuracy >= 60) return 'Keep at it!';
+  return 'Try again.';
+}
+
+function stampLabel(accuracy: number, revealed: boolean): string {
+  if (revealed) return 'INCOMPLETE';
+  if (accuracy === 100) return 'PERFECT';
+  if (accuracy >= 90) return 'EXCELLENT';
+  if (accuracy >= 75) return 'GREAT';
+  if (accuracy >= 60) return 'GOOD';
+  return 'TRY AGAIN';
+}
+
+/** Hand-drawn imperfect circle SVG. The path starts at upper-right,
+ *  loops around, and overshoots past where it began. */
+function GradeCircle() {
+  return (
+    <svg
+      className="grade-circle-svg"
+      viewBox="0 0 120 120"
+      aria-hidden="true"
+    >
+      <path
+        d="M 96 38
+           C 100 18 78 8 60 11
+           C 30 12 12 30 13 60
+           C 14 90 36 108 62 107
+           C 92 106 110 86 109 58
+           C 108 32 88 14 64 14
+           C 48 14 38 22 36 32"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A red check mark drawn with two strokes. */
+function RedCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="red-check" aria-hidden="true">
+      <path
+        d="M 4 13 L 10 19 L 21 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function RedCross() {
+  return (
+    <svg viewBox="0 0 24 24" className="red-cross" aria-hidden="true">
+      <path
+        d="M 5 5 L 19 19 M 19 5 L 5 19"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function CompletionOverlay({
+  paragraphTitle,
   foundCount,
   wrong,
   total,
@@ -413,6 +510,7 @@ function CompletionOverlay({
   isLast,
   onNext,
 }: {
+  paragraphTitle: string;
   foundCount: number;
   wrong: number;
   total: number;
@@ -421,41 +519,93 @@ function CompletionOverlay({
   isLast: boolean;
   onNext: () => void;
 }) {
-  const stars = revealed ? 0 : accuracy >= 95 ? 3 : accuracy >= 75 ? 2 : 1;
+  const grade = letterGrade(accuracy, revealed, wrong > 0);
+  const note = marginNote(accuracy, revealed);
+  const stamp = stampLabel(accuracy, revealed);
+  const isStrong = !revealed && accuracy >= 75;
+  const isPerfect = !revealed && accuracy === 100 && wrong === 0;
 
   return (
     <div className="overlay">
-      <div className="overlay-card">
-        <div className="overlay-stars">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className={`star ${i < stars ? 'star--on' : ''}`}
-              style={{ animationDelay: `${i * 120}ms` }}
-            >
-              <Star />
+      <div
+        className={`graded-sheet ${revealed ? 'graded-sheet--inc' : ''} ${
+          isPerfect ? 'graded-sheet--perfect' : ''
+        }`}
+      >
+        <div className="graded-perforation" aria-hidden="true" />
+        <div className="graded-margin" aria-hidden="true" />
+
+        <div className="graded-header">
+          <div className="graded-title-block">
+            <div className="graded-eyebrow">Proofed · Round Quiz</div>
+            <h2 className="graded-title">{paragraphTitle}</h2>
+            <div className="graded-name">
+              <span className="graded-name-label">Name</span>
+              <span className="graded-name-value">Player</span>
+            </div>
+          </div>
+          <div className={`grade-stamp grade-stamp--${gradeBucket(grade)}`}>
+            <GradeCircle />
+            <span className="grade-stamp-letter">{grade}</span>
+          </div>
+        </div>
+
+        <ul className="graded-list">
+          <li className="graded-row">
+            <span className="graded-row-mark">
+              {foundCount === total ? <RedCheck /> : <RedCross />}
             </span>
-          ))}
+            <span className="graded-row-label">Errors found</span>
+            <span className="graded-row-value">
+              {foundCount} / {total}
+            </span>
+          </li>
+          <li className="graded-row">
+            <span className="graded-row-mark">
+              {wrong === 0 ? <RedCheck /> : <RedCross />}
+            </span>
+            <span className="graded-row-label">Wrong taps</span>
+            <span className="graded-row-value">{wrong}</span>
+          </li>
+          <li className="graded-row">
+            <span className="graded-row-mark">
+              {isStrong ? <RedCheck /> : <RedCross />}
+            </span>
+            <span className="graded-row-label">Accuracy</span>
+            <span className="graded-row-value graded-row-value--score">
+              {accuracy}<span className="graded-pct">%</span>
+            </span>
+          </li>
+        </ul>
+
+        <div className="graded-bottom-row">
+          <div className="graded-margin-note">
+            <span className="graded-margin-note-line" />
+            {note}
+          </div>
+          <div
+            className={`graded-rubber-stamp graded-rubber-stamp--${gradeBucket(grade)}`}
+          >
+            <span className="graded-rubber-stamp-inner">{stamp}</span>
+          </div>
         </div>
-        <h2 className="overlay-title">
-          {revealed
-            ? 'Page revealed'
-            : stars === 3
-              ? 'Perfect page!'
-              : 'Page complete'}
-        </h2>
-        <div className="overlay-stats">
-          <Stat label="Found" value={`${foundCount} / ${total}`} />
-          <Stat label="Misses" value={`${wrong}`} />
-          <Stat label="Accuracy" value={`${accuracy}%`} />
+
+        <div className="graded-actions">
+          <button className="btn btn--primary" onClick={onNext}>
+            {isLast ? 'See full report' : 'Next page'}
+            <ArrowRight />
+          </button>
         </div>
-        <button className="btn btn--primary" onClick={onNext}>
-          {isLast ? 'See results' : 'Next page'}
-          <ArrowRight />
-        </button>
       </div>
     </div>
   );
+}
+
+function gradeBucket(grade: string): 'top' | 'mid' | 'low' | 'inc' {
+  if (grade === 'INC') return 'inc';
+  if (grade.startsWith('A')) return 'top';
+  if (grade.startsWith('B') || grade.startsWith('C')) return 'mid';
+  return 'low';
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -547,14 +697,6 @@ function ArrowLeft() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function Star() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 2.5l2.95 6.34 6.97.79-5.18 4.74 1.4 6.86L12 17.77l-6.14 3.46 1.4-6.86L2.08 9.63l6.97-.79L12 2.5z" />
     </svg>
   );
 }

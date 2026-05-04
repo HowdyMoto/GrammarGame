@@ -14,6 +14,7 @@
     "@fontsource/crimson-pro": "^5.2.8",
     "@fontsource/instrument-sans": "^5.2.8",
     "@fontsource/inter": "^5.2.8",
+    "@fontsource/special-elite": "^5.2.8",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

@@ -15,9 +15,13 @@
   --ink-soft: #5b4b34;
   --ink-mute: #8e7d61;
 
-  --red-pen: #c2342a;
-  --red-pen-deep: #94251d;
+  --red-pen: #c2342a;        /* default red pen */
+  --red-pen-fresh: #d43f3a;  /* fresh ink, brighter */
+  --red-pen-stamp: #b5302c;  /* stamp ink */
+  --red-pen-deep: #94251d;   /* pressed-in / older */
   --red-pen-soft: rgba(194, 52, 42, 0.13);
+
+  --typewriter: 'Special Elite', 'Courier New', ui-monospace, monospace;
 
   --pencil: #6a5b40;
   --pencil-soft: rgba(106, 91, 64, 0.18);
@@ -259,12 +263,14 @@ button:focus-visible {
   font-family: var(--hand);
   font-style: italic;
   font-weight: 700;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   font-size: 1.02em;
   display: inline-block;
   transform: rotate(-3deg);
   padding: 0 0.05em;
   letter-spacing: 0;
+  text-shadow: 0 0 0.7px rgba(212, 63, 58, 0.5),
+    0 2px 1px rgba(150, 35, 30, 0.18);
 }
 .welcome-sub {
   font-family: var(--serif);
@@ -279,8 +285,9 @@ button:focus-visible {
   font-family: var(--hand);
   font-weight: 700;
   font-style: italic;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   font-size: 1.15em;
+  text-shadow: 0 0 0.5px rgba(212, 63, 58, 0.45);
 }
 .mode-grid {
   display: grid;
@@ -344,11 +351,12 @@ button:focus-visible {
 .mode-card-mult {
   font-family: var(--hand);
   font-weight: 700;
-  font-size: 1.6rem;
-  color: var(--red-pen);
+  font-size: 1.7rem;
+  color: var(--red-pen-fresh);
   line-height: 1;
   transform: rotate(-6deg);
   display: inline-block;
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
 }
 .mode-card-tag {
   margin: 0;
@@ -485,13 +493,14 @@ button:focus-visible {
   font-family: var(--hand);
   font-weight: 700;
   font-size: 1.55rem;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   font-variant-numeric: tabular-nums;
   min-width: 1.4ch;
   text-align: right;
   line-height: 1;
   transform: rotate(-2deg);
   display: inline-block;
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
 }
 .score--flash {
   animation: scoreInk 0.55s var(--ease-out);
@@ -603,7 +612,7 @@ button:focus-visible {
   font-weight: 700;
   font-size: 1.15em;
   letter-spacing: 0.005em;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   white-space: nowrap;
   pointer-events: none;
   transform: translateX(-50%) rotate(-2.5deg);
@@ -611,6 +620,8 @@ button:focus-visible {
   animation: inkWrite 0.4s var(--ease-out) both;
   z-index: 2;
   line-height: 1;
+  text-shadow: 0 0 0.5px rgba(212, 63, 58, 0.5),
+    0 1px 0.5px rgba(150, 35, 30, 0.18);
 }
 .tok--missed .tok-correction {
   color: var(--red-pen-deep);
@@ -697,12 +708,14 @@ button:focus-visible {
   font-weight: 700;
   font-size: 1.7em;
   line-height: 1;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   transform: rotate(-8deg);
   transform-origin: left bottom;
   animation: gapPop 0.4s var(--ease-out) both;
   pointer-events: none;
   white-space: nowrap;
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.55),
+    0 1px 0.5px rgba(150, 35, 30, 0.18);
 }
 .gap--found .gap-caret {
   display: none;
@@ -950,7 +963,10 @@ button:focus-visible {
   opacity: 1;
 }
 
-/* ---------- Overlay (paragraph complete) — looks like a stamped report ---------- */
+/* ---------- Overlay (paragraph complete) — graded paper ----------
+   The whole modal is one quiz sheet, ripped from a pad and resting
+   on a darker desk. The big circled letter grade in the upper right
+   is the standout element; everything else supports it. */
 .overlay {
   position: fixed;
   inset: 0;
@@ -958,76 +974,382 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  background: rgba(40, 25, 10, 0.4);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  animation: fade 0.35s ease;
+  padding: 32px 16px;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(40, 25, 10, 0.5) 0%,
+      rgba(18, 11, 5, 0.78) 90%
+    );
+  backdrop-filter: blur(5px) saturate(0.85);
+  -webkit-backdrop-filter: blur(5px) saturate(0.85);
+  animation: fade 0.4s ease;
 }
-.overlay-card {
-  width: 100%;
-  max-width: 440px;
-  background: var(--paper);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.07 0'/></filter><rect width='320' height='320' filter='url(%23n)'/></svg>");
-  border-radius: var(--radius);
-  padding: 38px 34px 32px;
-  text-align: center;
-  border: 1.5px solid var(--paper-edge);
-  box-shadow: 0 30px 80px -20px rgba(40, 25, 10, 0.45);
-  animation: cardIn 0.5s var(--ease-out);
+
+.graded-sheet {
   position: relative;
+  width: 100%;
+  max-width: 480px;
+  padding: 48px 30px 32px 76px;
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='11'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.07 0'/></filter><rect width='320' height='320' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.22  0 0 0 0.16 0'/></filter><rect width='600' height='600' filter='url(%23f)'/></svg>"),
+    radial-gradient(
+      ellipse at 50% -5%,
+      rgba(255, 250, 220, 0.55),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 100% 100%,
+      rgba(110, 70, 30, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 0% 100%,
+      rgba(110, 70, 30, 0.1),
+      transparent 60%
+    );
+  background-size: 320px 320px, 600px 600px, 100% 100%, 100% 100%, 100% 100%;
+  border-radius: 3px;
+  /* Stacked, layered shadows for "resting on a desk" feel */
+  box-shadow:
+    inset 0 0 0 0.5px rgba(60, 40, 20, 0.08),
+    0 1px 2px rgba(40, 25, 10, 0.22),
+    0 12px 28px -6px rgba(40, 25, 10, 0.34),
+    0 38px 70px -12px rgba(40, 25, 10, 0.42);
+  transform: rotate(-0.6deg);
+  animation: sheetDrop 0.6s var(--ease-out) both;
 }
-.overlay-card::before {
+
+/* Two paper sheets visible behind the main one — implies a stack of
+   graded quizzes on the teacher's desk. */
+.graded-sheet::before {
   content: '';
   position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(50, 30, 10, 0.05);
-  border-radius: 5px;
+  top: 6px;
+  left: -5px;
+  right: 9px;
+  bottom: -3px;
+  background-color: var(--paper-warm);
+  border-radius: 3px;
+  z-index: -1;
+  transform: rotate(1.6deg);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.2),
+    0 8px 18px -6px rgba(40, 25, 10, 0.26);
+}
+.graded-sheet::after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: 7px;
+  right: -7px;
+  bottom: -7px;
+  background-color: var(--paper-shade);
+  border-radius: 3px;
+  z-index: -2;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.16),
+    0 12px 22px -8px rgba(40, 25, 10, 0.22);
+}
+
+/* Top edge — subtle scalloped/torn-from-pad look via SVG mask */
+.graded-perforation {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='11'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.07 0'/></filter><rect width='320' height='320' filter='url(%23n)'/></svg>");
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='7' viewBox='0 0 28 7'><path d='M0 7 L0 3 Q3.5 -0.5 7 3 Q10.5 6.5 14 3 Q17.5 -0.5 21 3 Q24.5 6.5 28 3 L28 7 Z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='7' viewBox='0 0 28 7'><path d='M0 7 L0 3 Q3.5 -0.5 7 3 Q10.5 6.5 14 3 Q17.5 -0.5 21 3 Q24.5 6.5 28 3 L28 7 Z' fill='black'/></svg>");
+  -webkit-mask-size: 28px 7px;
+  mask-size: 28px 7px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  border-radius: 3px 3px 0 0;
   pointer-events: none;
 }
-.overlay-stars {
-  display: inline-flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  transform: rotate(-2deg);
+
+/* Red vertical margin line, ~40px from the left edge */
+.graded-margin {
+  position: absolute;
+  left: 50px;
+  top: 14px;
+  bottom: 14px;
+  width: 0;
+  border-left: 1.5px solid var(--red-pen);
+  opacity: 0.78;
+  pointer-events: none;
 }
-.star {
-  width: 38px;
-  height: 38px;
+
+/* Header */
+.graded-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  margin-bottom: 22px;
+}
+.graded-title-block {
+  flex: 1;
+  min-width: 0;
+}
+.graded-eyebrow {
+  font-family: var(--typewriter);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 6px;
+}
+.graded-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 4.5vw, 1.55rem);
+  line-height: 1.18;
+  color: var(--ink);
+  margin: 0 0 14px;
+  letter-spacing: -0.005em;
+}
+.graded-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--serif);
+  color: var(--ink-soft);
+}
+.graded-name-label {
+  font-family: var(--typewriter);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.graded-name-value {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--ink);
+  border-bottom: 1px solid rgba(80, 60, 30, 0.45);
+  padding: 0 14px 1px;
+  min-width: 90px;
+  transform: rotate(-1.5deg);
+  display: inline-block;
+}
+
+/* The big circled letter grade — the standout */
+.grade-stamp {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-7deg);
+  animation: gradeStamp 0.55s 0.35s var(--ease-out) both;
+  color: var(--red-pen-deep);
+  filter: drop-shadow(0 1px 0 rgba(150, 40, 30, 0.18));
+}
+.grade-stamp--top { color: var(--red-pen-deep); }
+.grade-stamp--mid { color: var(--red-pen); }
+.grade-stamp--low { color: #a32a30; }
+.grade-stamp--inc { color: #6b5040; }
+
+.grade-circle-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.grade-stamp-letter {
+  position: relative;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 2.7rem;
+  line-height: 1;
+  color: inherit;
+  transform: rotate(2deg);
+  text-shadow: 0 0 0.6px currentColor;
+  letter-spacing: -0.02em;
+}
+.grade-stamp--inc .grade-stamp-letter {
+  font-family: var(--typewriter);
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+/* Stats list with handwritten checks/crosses */
+.graded-list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.graded-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.graded-row-mark {
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(120, 90, 50, 0.18);
-  transform: scale(0.6);
-  animation: starPop 0.5s var(--ease-out) both;
 }
-.star svg {
-  width: 100%;
-  height: 100%;
+.red-check {
+  width: 26px;
+  height: 26px;
+  color: var(--red-pen-fresh);
+  transform: rotate(-7deg) scale(1.05);
+  filter: drop-shadow(0 0 0.6px rgba(212, 63, 58, 0.5));
 }
-.star--on {
+.red-cross {
+  width: 22px;
+  height: 22px;
   color: var(--red-pen);
-  filter: drop-shadow(0 4px 8px rgba(150, 40, 30, 0.25));
+  transform: rotate(8deg);
+  filter: drop-shadow(0 0 0.4px rgba(194, 52, 42, 0.4));
 }
-.overlay-title {
-  font-family: var(--serif);
-  font-weight: 700;
+.graded-row-label {
   font-style: italic;
+  color: var(--ink-soft);
+  letter-spacing: 0.005em;
+}
+.graded-row-value {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.45rem;
+  color: var(--red-pen);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 0.5px var(--red-pen);
+}
+.graded-row-value--score {
   font-size: 1.85rem;
-  letter-spacing: -0.005em;
-  margin: 0 0 22px;
-  color: var(--ink);
+  color: var(--red-pen-fresh);
+  text-decoration: underline wavy var(--red-pen-fresh);
+  text-decoration-thickness: 1.5px;
+  text-decoration-skip-ink: none;
+  padding-bottom: 2px;
 }
-.overlay-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  background: rgba(255, 250, 220, 0.5);
-  border: 1px solid var(--paper-edge);
-  border-radius: 6px;
-  padding: 18px 12px;
-  margin-bottom: 26px;
+.graded-pct {
+  font-size: 0.62em;
+  margin-left: 1px;
+  vertical-align: 0.18em;
 }
+
+/* Bottom row holds the handwritten margin note (left) and the
+   rubber stamp (right) like a teacher's last touches on the paper. */
+.graded-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 8px;
+  min-height: 50px;
+}
+
+/* Margin note — handwritten with overshooting underline */
+.graded-margin-note {
+  position: relative;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.65rem;
+  color: var(--red-pen-fresh);
+  transform: rotate(-3deg);
+  display: inline-block;
+  line-height: 1;
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
+  animation: inkWrite 0.45s 0.55s var(--ease-out) both;
+  flex-shrink: 0;
+}
+.graded-margin-note-line {
+  position: absolute;
+  left: -10px;
+  right: -22px;
+  bottom: -6px;
+  height: 2px;
+  background: var(--red-pen-fresh);
+  border-radius: 2px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 0 1px rgba(212, 63, 58, 0.4);
+  animation: underlineSweep 0.4s 0.85s var(--ease-out) both;
+  transform-origin: left center;
+}
+
+/* Rubber stamp — typewriter font, double border, faded ink */
+.graded-rubber-stamp {
+  position: relative;
+  font-family: var(--typewriter);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  color: var(--red-pen-stamp);
+  border: 2.5px double var(--red-pen-stamp);
+  padding: 6px 14px;
+  border-radius: 3px;
+  transform: rotate(-9deg);
+  opacity: 0.78;
+  filter: blur(0.25px);
+  animation: stampLand 0.42s 0.85s var(--ease-out) both;
+  pointer-events: none;
+  text-shadow: 0 0 0.5px var(--red-pen-stamp);
+  flex-shrink: 0;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+.graded-rubber-stamp::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.35;
+}
+/* Subtle ink-deficit by overlaying a noise-masked highlight */
+.graded-rubber-stamp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' seed='8'/><feColorMatrix values='0 0 0 0 0.97  0 0 0 0 0.94  0 0 0 0 0.86  0 0 0 1.4 -0.6'/></filter><rect width='120' height='40' filter='url(%23n)'/></svg>");
+  background-size: 120px 40px;
+  mix-blend-mode: lighten;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.graded-rubber-stamp--top { color: var(--red-pen-stamp); }
+.graded-rubber-stamp--mid { color: #b5302c; }
+.graded-rubber-stamp--low { color: #94251d; opacity: 0.7; }
+.graded-rubber-stamp--inc {
+  color: #5b4530;
+  opacity: 0.55;
+}
+
+/* Action button area */
+.graded-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px dashed rgba(106, 91, 64, 0.35);
+}
+
+/* Old .stat lives on for the Summary screen */
 .stat {
   display: flex;
   flex-direction: column;
@@ -1040,6 +1362,7 @@ button:focus-visible {
   color: var(--red-pen);
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  text-shadow: 0 0 0.5px var(--red-pen);
 }
 .stat-label {
   font-family: var(--serif);
@@ -1079,10 +1402,12 @@ button:focus-visible {
   font-weight: 700;
   font-size: clamp(4rem, 12vw, 6.5rem);
   line-height: 0.95;
-  color: var(--red-pen);
+  color: var(--red-pen-fresh);
   font-variant-numeric: tabular-nums;
   transform: rotate(-3deg);
   display: inline-block;
+  text-shadow: 0 0 0.8px rgba(212, 63, 58, 0.5),
+    0 2px 1px rgba(150, 35, 30, 0.18);
 }
 .summary-score-label {
   color: var(--ink-mute);
@@ -1176,6 +1501,60 @@ button:focus-visible {
   from { opacity: 0; transform: translateY(20px) scale(0.96) rotate(-1deg); }
   to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
 }
+@keyframes sheetDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) rotate(-3deg) scale(0.92);
+    box-shadow:
+      inset 0 0 0 0.5px rgba(60, 40, 20, 0.08),
+      0 1px 2px rgba(40, 25, 10, 0),
+      0 4px 12px -6px rgba(40, 25, 10, 0),
+      0 12px 24px -12px rgba(40, 25, 10, 0);
+  }
+  60% {
+    transform: translateY(-4px) rotate(-0.2deg) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(-0.6deg) scale(1);
+  }
+}
+@keyframes gradeStamp {
+  0% {
+    opacity: 0;
+    transform: rotate(20deg) scale(2.5);
+    filter: blur(2px);
+  }
+  55% {
+    transform: rotate(-10deg) scale(0.88);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(1);
+  }
+}
+@keyframes stampLand {
+  0% {
+    opacity: 0;
+    transform: rotate(-30deg) scale(2.4);
+    filter: blur(2.5px);
+  }
+  55% {
+    opacity: 0.95;
+    transform: rotate(-7deg) scale(0.9);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0.78;
+    transform: rotate(-9deg) scale(1);
+    filter: blur(0.25px);
+  }
+}
+@keyframes underlineSweep {
+  from { transform: rotate(-1.2deg) scaleX(0); }
+  to { transform: rotate(-1.2deg) scaleX(1); }
+}
 @keyframes inkWrite {
   0% {
     opacity: 0;
@@ -1234,6 +1613,37 @@ button:focus-visible {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
+  .graded-sheet {
+    padding: 38px 22px 26px 60px;
+  }
+  .graded-margin {
+    left: 38px;
+  }
+  .grade-stamp {
+    width: 76px;
+    height: 76px;
+  }
+  .grade-stamp-letter {
+    font-size: 2.1rem;
+  }
+  .graded-title {
+    font-size: 1.3rem;
+  }
+  .graded-row-value {
+    font-size: 1.25rem;
+  }
+  .graded-row-value--score {
+    font-size: 1.55rem;
+  }
+  .graded-margin-note {
+    font-size: 1.4rem;
+  }
+  .graded-rubber-stamp {
+    bottom: 18px;
+    right: 18px;
+    font-size: 0.82rem;
+    padding: 5px 11px;
+  }
   .topbar {
     padding: 14px 16px 12px;
     grid-template-columns: auto 1fr auto;
