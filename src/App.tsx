@@ -124,33 +124,55 @@ export function App() {
       if (!current || revealed || paraComplete) return;
       const tok = current.tokens[i];
       if (!tok) return;
-      if (foundWords.has(i)) return;
 
-      const anchor =
+      const wordAnchor =
         document.querySelector<HTMLElement>(`.tok[data-i="${i}"]`) ?? null;
+      const earned = Math.round(POINTS_CORRECT * MODE_INFO[mode].multiplier);
 
-      if (tok.error) {
+      // Path 1: resolve a word error (most natural — they tapped the word).
+      if (tok.error && !foundWords.has(i)) {
         const next = new Set(foundWords);
         next.add(i);
         setFoundWords(next);
-        const earned = Math.round(POINTS_CORRECT * MODE_INFO[mode].multiplier);
         setScore((s) => s + earned);
         setScoreFlash((n) => n + 1);
         sounds.correct();
-        addPop(`+${earned}`, 'good', anchor);
-      } else {
-        setWrongCount((n) => n + 1);
-        flashKey.current += 1;
-        setFlash({ kind: 'word', index: i, key: flashKey.current });
-        const lost = Math.round(POINTS_WRONG * MODE_INFO[mode].multiplier);
-        setScore((s) => Math.max(0, s + lost));
-        setScoreFlash((n) => n + 1);
-        sounds.wrong();
-        addPop(`${lost}`, 'bad', anchor);
-        window.setTimeout(() => setFlash(null), 450);
+        addPop(`+${earned}`, 'good', wordAnchor);
+        return;
       }
+
+      // Path 2: fall through to a gap-after-this-word error. This is the
+      // forgiving mobile path — tapping the word "day" can drop in the
+      // missing comma after it without needing to hit the narrow gap.
+      if (tok.gapError && !foundGaps.has(i)) {
+        const gapAnchor =
+          document.querySelector<HTMLElement>(`.gap[data-g="${i}"]`) ?? null;
+        const next = new Set(foundGaps);
+        next.add(i);
+        setFoundGaps(next);
+        setScore((s) => s + earned);
+        setScoreFlash((n) => n + 1);
+        sounds.correct();
+        addPop(`+${earned}`, 'good', gapAnchor ?? wordAnchor);
+        return;
+      }
+
+      // Tapping a token whose error(s) are already resolved is a silent
+      // no-op — they hit something they've already fixed.
+      if (tok.error || tok.gapError) return;
+
+      // Genuine miss: token had no error to find.
+      setWrongCount((n) => n + 1);
+      flashKey.current += 1;
+      setFlash({ kind: 'word', index: i, key: flashKey.current });
+      const lost = Math.round(POINTS_WRONG * MODE_INFO[mode].multiplier);
+      setScore((s) => Math.max(0, s + lost));
+      setScoreFlash((n) => n + 1);
+      sounds.wrong();
+      addPop(`${lost}`, 'bad', wordAnchor);
+      window.setTimeout(() => setFlash(null), 450);
     },
-    [addPop, current, foundWords, mode, paraComplete, revealed],
+    [addPop, current, foundGaps, foundWords, mode, paraComplete, revealed],
   );
 
   const onClickGap = useCallback(
