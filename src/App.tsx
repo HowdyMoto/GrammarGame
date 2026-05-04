@@ -41,6 +41,7 @@ interface ParaResult {
 const PARA_PER_RUN = 6;
 const POINTS_CORRECT = 10;
 const POINTS_WRONG = -3;
+const STREAK_BONUS_PER_LEVEL = 50;
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('welcome');
@@ -64,6 +65,14 @@ export function App() {
   const [results, setResults] = useState<ParaResult[]>([]);
   const [muted, setMuted] = useState(false);
 
+  // Perfect-streak mechanic. A paragraph counts as a "streak hit" when the
+  // user finds every error with zero wrong taps and without revealing.
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [lastBonus, setLastBonus] = useState(0); // bonus awarded for the
+  // current paragraph (shown in the modal). Cleared when next page starts.
+  const [streakPulse, setStreakPulse] = useState(0); // bumps when streak grows
+
   const startGame = useCallback((selected: Mode) => {
     sounds.enable();
     sounds.start();
@@ -80,6 +89,10 @@ export function App() {
     completionFiredRef.current = false;
     setScore(0);
     setResults([]);
+    setStreak(0);
+    setBestStreak(0);
+    setLastBonus(0);
+    setStreakPulse(0);
     setScreen('playing');
   }, []);
 
@@ -175,6 +188,7 @@ export function App() {
   );
 
   // Auto-detect paragraph complete (all errors found, not revealed).
+  // Also resolve the streak bonus right here so the modal can display it.
   useEffect(() => {
     if (!current) return;
     if (paraComplete || revealed) return;
@@ -184,12 +198,37 @@ export function App() {
     if (found === total && total > 0) {
       completionFiredRef.current = true;
       const t = window.setTimeout(() => {
+        const isPerfect = wrongCount === 0;
+        if (isPerfect) {
+          const newStreak = streak + 1;
+          const bonus = Math.round(
+            newStreak * STREAK_BONUS_PER_LEVEL * MODE_INFO[mode].multiplier,
+          );
+          setStreak(newStreak);
+          setBestStreak((b) => Math.max(b, newStreak));
+          setScore((s) => s + bonus);
+          setScoreFlash((n) => n + 1);
+          setLastBonus(bonus);
+          setStreakPulse((n) => n + 1);
+        } else {
+          setStreak(0);
+          setLastBonus(0);
+        }
         setParaComplete(true);
         sounds.complete();
       }, 500);
       return () => window.clearTimeout(t);
     }
-  }, [current, foundWords, foundGaps, paraComplete, revealed]);
+  }, [
+    current,
+    foundWords,
+    foundGaps,
+    paraComplete,
+    revealed,
+    wrongCount,
+    mode,
+    streak,
+  ]);
 
   // "I'm stuck" — show what was missed in red, but stay on the page.
   const reveal = useCallback(() => {
@@ -199,8 +238,11 @@ export function App() {
   }, [current, paraComplete, revealed]);
 
   // Continue — close the page and go to overlay (after reveal or directly).
+  // Reveal or any miss breaks the streak.
   const finishPage = useCallback(() => {
     if (!current || paraComplete) return;
+    setStreak(0);
+    setLastBonus(0);
     setParaComplete(true);
   }, [current, paraComplete]);
 
@@ -231,6 +273,7 @@ export function App() {
     setParaComplete(false);
     completionFiredRef.current = false;
     setPops([]);
+    setLastBonus(0);
   }, [
     current,
     foundGaps.size,
@@ -253,6 +296,7 @@ export function App() {
     return (
       <Summary
         score={score}
+        bestStreak={bestStreak}
         results={results}
         onPlayAgain={() => setScreen('welcome')}
       />
@@ -280,7 +324,7 @@ export function App() {
           >
             <ArrowLeft />
           </button>
-          <span className="brand">Proofed</span>
+          <span className="brand">Professor Proof</span>
         </div>
         <div className="topbar-center">
           <span className={`mode-chip mode-chip--${mode}`}>
@@ -292,6 +336,17 @@ export function App() {
           </span>
         </div>
         <div className="topbar-right">
+          {streak >= 1 && (
+            <span
+              key={streakPulse}
+              className={`streak-chip ${streak >= 3 ? 'streak-chip--hot' : ''} ${streak >= 5 ? 'streak-chip--blazing' : ''}`}
+              title={`${streak} perfect in a row`}
+              aria-label={`Perfect streak of ${streak}`}
+            >
+              <FlameIcon />
+              <span className="streak-chip-num">×{streak}</span>
+            </span>
+          )}
           <span key={scoreFlash} className="score score--flash">
             {score}
           </span>
@@ -354,6 +409,8 @@ export function App() {
           total={total}
           accuracy={accuracy}
           revealed={revealed}
+          streak={streak}
+          lastBonus={lastBonus}
           isLast={index + 1 >= queue.length}
           onNext={next}
         />
@@ -369,14 +426,15 @@ function Welcome({ onStart }: { onStart: (m: Mode) => void }) {
       <div className="welcome-inner">
         <div className="brand-mark">
           <span className="brand-dot" />
-          <span className="brand-name">Proofed</span>
+          <span className="brand-name">Professor Proof</span>
         </div>
         <h1 className="welcome-title">
           Find every <em>slip</em> in the page.
         </h1>
         <p className="welcome-sub">
           Tap each word with a mistake. Tap <em>between</em> words to insert
-          a missing comma or period. Choose your difficulty.
+          a missing comma or period. String <em>perfect</em> pages together
+          for a streak bonus.
         </p>
         <div className="mode-grid">
           {modes.map((m) => (
@@ -500,6 +558,13 @@ function RedCross() {
   );
 }
 
+function streakLabel(streak: number): string {
+  if (streak >= 7) return 'LEGENDARY';
+  if (streak >= 5) return 'UNSTOPPABLE';
+  if (streak >= 3) return 'ON FIRE';
+  return 'PERFECT STREAK';
+}
+
 function CompletionOverlay({
   paragraphTitle,
   foundCount,
@@ -507,6 +572,8 @@ function CompletionOverlay({
   total,
   accuracy,
   revealed,
+  streak,
+  lastBonus,
   isLast,
   onNext,
 }: {
@@ -516,6 +583,8 @@ function CompletionOverlay({
   total: number;
   accuracy: number;
   revealed: boolean;
+  streak: number;
+  lastBonus: number;
   isLast: boolean;
   onNext: () => void;
 }) {
@@ -524,6 +593,7 @@ function CompletionOverlay({
   const stamp = stampLabel(accuracy, revealed);
   const isStrong = !revealed && accuracy >= 75;
   const isPerfect = !revealed && accuracy === 100 && wrong === 0;
+  const showStreak = isPerfect && streak >= 2 && lastBonus > 0;
 
   return (
     <div className="overlay">
@@ -590,6 +660,25 @@ function CompletionOverlay({
           </div>
         </div>
 
+        {showStreak && (
+          <div
+            className={`streak-banner streak-banner--tier-${
+              streak >= 7 ? 4 : streak >= 5 ? 3 : streak >= 3 ? 2 : 1
+            }`}
+            role="status"
+          >
+            <FlameIcon />
+            <span className="streak-banner-text">
+              <span className="streak-banner-label">{streakLabel(streak)}</span>
+              <span className="streak-banner-meta">
+                <span className="streak-banner-x">×{streak}</span>
+                <span className="streak-banner-bonus">+{lastBonus} bonus</span>
+              </span>
+            </span>
+            <FlameIcon />
+          </div>
+        )}
+
         <div className="graded-actions">
           <button className="btn btn--primary" onClick={onNext}>
             {isLast ? 'See full report' : 'Next page'}
@@ -619,10 +708,12 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Summary({
   score,
+  bestStreak,
   results,
   onPlayAgain,
 }: {
   score: number;
+  bestStreak: number;
   results: ParaResult[];
   onPlayAgain: () => void;
 }) {
@@ -639,7 +730,7 @@ function Summary({
       <div className="summary-inner">
         <div className="brand-mark brand-mark--small">
           <span className="brand-dot" />
-          <span className="brand-name">Proofed</span>
+          <span className="brand-name">Professor Proof</span>
         </div>
         <h1 className="summary-title">Round complete.</h1>
         <div className="summary-score">
@@ -650,6 +741,7 @@ function Summary({
           <Stat label="Found" value={`${totalFound} / ${totalErrs}`} />
           <Stat label="Misses" value={`${totalMiss}`} />
           <Stat label="Accuracy" value={`${acc}%`} />
+          <Stat label="Best streak" value={`×${bestStreak}`} />
         </div>
         <ul className="summary-list">
           {results.map((r, i) => (
@@ -670,6 +762,19 @@ function Summary({
         </button>
       </div>
     </div>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg
+      className="flame-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      <path d="M12 2c-.4 2.7-2.5 4.3-4.4 6.4C5.7 10.5 4.5 13 4.5 15.5 4.5 19.6 7.8 23 12 23s7.5-3.4 7.5-7.5c0-3.4-1.7-5.7-3.7-8C13.7 5.2 12.5 3.7 12 2zm0 8c.7 1.7 2.4 2.6 3.4 4.5.9 1.7.6 3.7-.7 5-1.5 1.5-3.9 1.5-5.4 0-1.4-1.4-1.6-3.7-.4-5.4 1.2-1.6 2.5-2.5 3.1-4.1z" />
+    </svg>
   );
 }
 

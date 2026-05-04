@@ -502,6 +502,133 @@ button:focus-visible {
   display: inline-block;
   text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
 }
+
+/* ---------- Streak chip (topbar) ---------- */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 8px;
+  border: 1.5px solid var(--red-pen);
+  border-radius: 999px;
+  background: rgba(212, 63, 58, 0.08);
+  color: var(--red-pen);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  transform: rotate(-2deg);
+  animation: streakPulse 0.6s var(--ease-out);
+}
+.streak-chip-num {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
+}
+.streak-chip .flame-icon {
+  width: 16px;
+  height: 16px;
+}
+.streak-chip--hot {
+  background: rgba(212, 63, 58, 0.16);
+  border-color: var(--red-pen-fresh);
+  color: var(--red-pen-fresh);
+  animation: streakPulse 0.6s var(--ease-out),
+    streakHotGlow 1.6s ease-in-out infinite;
+}
+.streak-chip--blazing {
+  border-width: 2px;
+  background: rgba(212, 63, 58, 0.22);
+  animation: streakPulse 0.6s var(--ease-out),
+    streakBlazeGlow 1.2s ease-in-out infinite;
+}
+.flame-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 1px rgba(212, 63, 58, 0.4));
+}
+
+/* ---------- Streak banner (in modal) ---------- */
+.streak-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 14px;
+  margin: 6px 0 14px;
+  border: 2px dashed var(--red-pen-fresh);
+  border-radius: 6px;
+  background: rgba(212, 63, 58, 0.07);
+  color: var(--red-pen-fresh);
+  position: relative;
+  transform: rotate(-1deg);
+  animation: streakBannerIn 0.5s 1.05s var(--ease-out) both;
+}
+.streak-banner .flame-icon {
+  width: 22px;
+  height: 22px;
+  animation: flameFlicker 1.4s ease-in-out infinite;
+}
+.streak-banner .flame-icon:last-child {
+  animation-delay: -0.7s;
+  transform: scaleX(-1);
+}
+.streak-banner-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.streak-banner-label {
+  font-family: var(--typewriter);
+  font-weight: 400;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red-pen-deep);
+  text-shadow: 0 0 0.4px var(--red-pen-deep);
+}
+.streak-banner-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.streak-banner-x {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: var(--red-pen-fresh);
+  text-shadow: 0 0 0.6px rgba(212, 63, 58, 0.5);
+  line-height: 1;
+}
+.streak-banner-bonus {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--red-pen);
+  font-variant-numeric: tabular-nums;
+}
+.streak-banner--tier-2 {
+  background: rgba(212, 63, 58, 0.11);
+  border-style: solid;
+  border-width: 2.5px;
+}
+.streak-banner--tier-3 {
+  background: rgba(212, 63, 58, 0.16);
+  border-style: solid;
+  border-width: 3px;
+  animation: streakBannerIn 0.5s 1.05s var(--ease-out) both,
+    streakHotGlow 1.6s ease-in-out 1.5s infinite;
+}
+.streak-banner--tier-4 {
+  background: rgba(212, 63, 58, 0.2);
+  border-style: solid;
+  border-width: 3px;
+  animation: streakBannerIn 0.5s 1.05s var(--ease-out) both,
+    streakBlazeGlow 1.2s ease-in-out 1.5s infinite;
+}
 .score--flash {
   animation: scoreInk 0.55s var(--ease-out);
 }
@@ -1418,7 +1545,7 @@ button:focus-visible {
 }
 .summary-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 10px;
   background: rgba(255, 250, 220, 0.5);
   border: 1px solid var(--paper-edge);
@@ -1554,6 +1681,49 @@ button:focus-visible {
 @keyframes underlineSweep {
   from { transform: rotate(-1.2deg) scaleX(0); }
   to { transform: rotate(-1.2deg) scaleX(1); }
+}
+@keyframes streakPulse {
+  0% { transform: rotate(-2deg) scale(0.7); opacity: 0; }
+  50% { transform: rotate(2deg) scale(1.18); opacity: 1; }
+  100% { transform: rotate(-2deg) scale(1); opacity: 1; }
+}
+@keyframes streakHotGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 63, 58, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px -2px rgba(212, 63, 58, 0.55),
+      0 0 0 0 rgba(212, 63, 58, 0);
+  }
+}
+@keyframes streakBlazeGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 63, 58, 0),
+      inset 0 0 0 0 rgba(255, 200, 80, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px 0 rgba(212, 63, 58, 0.65),
+      inset 0 0 12px 0 rgba(255, 200, 80, 0.18);
+  }
+}
+@keyframes streakBannerIn {
+  0% {
+    opacity: 0;
+    transform: rotate(2deg) scale(0.7) translateY(8px);
+  }
+  60% {
+    transform: rotate(-2deg) scale(1.05) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-1deg) scale(1) translateY(0);
+  }
+}
+@keyframes flameFlicker {
+  0%, 100% { transform: scale(1) translateY(0); }
+  25% { transform: scale(1.12, 0.95) translateY(-1px); }
+  50% { transform: scale(0.95, 1.08) translateY(0.5px); }
+  75% { transform: scale(1.05, 1.02) translateY(-0.5px); }
 }
 @keyframes inkWrite {
   0% {
