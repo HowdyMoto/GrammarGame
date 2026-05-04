@@ -19,23 +19,12 @@ npm run preview  # serve the production build locally
 
 ## Deployment
 
-Pushes to `main` are built and uploaded to your SFTP server by the
-`Build & deploy` GitHub Action. Configure these repo secrets under
-**Settings → Secrets and variables → Actions**:
+Build locally and upload `dist/` to whichever folder on your web server you
+want — the build emits all assets with relative paths so it works in any
+subdirectory.
 
-| Secret              | Required          | Notes                                                 |
-| ------------------- | ----------------- | ----------------------------------------------------- |
-| `SFTP_HOST`         | yes               | Hostname or IP of the SFTP server                     |
-| `SFTP_USERNAME`     | yes               | SFTP login                                            |
-| `SFTP_PORT`         | no (default `22`) | Override if not standard                              |
-| `SFTP_REMOTE_PATH`  | yes               | Absolute path on the server, e.g. `/var/www/proofed/` |
-| `SFTP_PRIVATE_KEY`  | one of these two  | Full private key (incl. BEGIN/END lines)              |
-| `SFTP_PASSWORD`     | one of these two  | Password for the SFTP user                            |
-
-Use either `SFTP_PRIVATE_KEY` (preferred) or `SFTP_PASSWORD`. If both are set,
-the key is used.
-
-The workflow uploads the contents of `dist/` into `SFTP_REMOTE_PATH`. It does
-not delete remote files that no longer exist locally; flip
-`delete_remote_files: true` in `.github/workflows/deploy.yml` if you want a
-clean mirror.
+```sh
+npm run build
+# then upload everything inside ./dist/ to your server, e.g.:
+rsync -av --delete dist/ user@host:/path/on/server/
+```
